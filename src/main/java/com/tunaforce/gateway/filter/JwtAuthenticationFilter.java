@@ -91,36 +91,36 @@ public class JwtAuthenticationFilter implements GlobalFilter {
             String source = tuple.getT2();
             ServerHttpRequest mutatedRequest = exchange.getRequest().mutate().headers(h -> {
                 // Remove any client-sent spoofable headers
-                h.remove("X-Auth-User-Id");
-                h.remove("X-Auth-Roles");
-                h.remove("X-Auth-Tenant");
-                h.remove("X-Auth-Login-Id");
-                h.remove("X-Auth-Username");
-                h.remove("X-Auth-Slack-Id");
-                h.remove("X-Auth-Tel");
-                h.remove("X-Auth-Source");
+                h.remove("X-User-Id");
+                h.remove("X-Roles");
+                h.remove("X-Tenant");
+                h.remove("X-Login-Id");
+                h.remove("X-Username");
+                h.remove("X-Slack-Id");
+                h.remove("X-Tel");
+                h.remove("X-Source");
 
                 // From AuthService login: subject=userId(UUID as String), role=single string claim
                 if (subject != null && !subject.isEmpty()) {
-                    h.add("X-Auth-User-Id", subject);
+                    h.add("X-User-Id", subject);
                 }
 
                 // role is mandatory in token
-                h.add("X-Auth-Roles", rolesHeader);
-                h.add("X-Auth-Source", source);
+                h.add("X-Roles", rolesHeader);
+                h.add("X-Source", source);
 
                 // Propagate additional user fields when available
                 if (user.userLoginId() != null && !user.userLoginId().isEmpty()) {
-                    h.add("X-Auth-Login-Id", user.userLoginId());
+                    h.add("X-Login-Id", user.userLoginId());
                 }
                 if (user.username() != null && !user.username().isEmpty()) {
-                    h.add("X-Auth-Username", user.username());
+                    h.add("X-Username", user.username());
                 }
                 if (user.slackId() != null && !user.slackId().isEmpty()) {
-                    h.add("X-Auth-Slack-Id", user.slackId());
+                    h.add("X-Slack-Id", user.slackId());
                 }
                 if (user.tel() != null && !user.tel().isEmpty()) {
-                    h.add("X-Auth-Tel", user.tel());
+                    h.add("X-Tel", user.tel());
                 }
             }).build();
 

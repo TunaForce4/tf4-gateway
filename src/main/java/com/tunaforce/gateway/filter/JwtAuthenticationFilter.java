@@ -39,9 +39,10 @@ public class JwtAuthenticationFilter implements GlobalFilter {
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
 
         String path = exchange.getRequest().getURI().getPath();
-    HttpMethod httpMethod = exchange.getRequest().getMethod();
-    String method = httpMethod.name();
-        if (path.equals("/auth/login") || path.equals("/auth/signup")) {
+        HttpMethod httpMethod = exchange.getRequest().getMethod();
+        String method = httpMethod.name();
+        // Bypass authentication for all /auth/** and only GET /users (list/search)
+        if (path.startsWith("/auth") || (HttpMethod.GET.equals(httpMethod) && path.startsWith("/users"))) {
             log.info("[GW][BYPASS] {} {} (public endpoint)", method, path);
             return chain.filter(exchange);
         }

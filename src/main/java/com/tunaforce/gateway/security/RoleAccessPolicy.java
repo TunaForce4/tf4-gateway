@@ -6,15 +6,22 @@ package com.tunaforce.gateway.security;
  */
 public final class RoleAccessPolicy {
 
-    private RoleAccessPolicy() {}
+    private RoleAccessPolicy() {
+    }
 
     /**
      * 허용되면 태그 문자열을, 거부되면 null을 반환합니다.
      */
     public static String getAccessTag(String role, String rawPath) {
+        String path = (rawPath == null) ? "/" : rawPath.toLowerCase();
+
+        // 공통 허용: 로그인 사용자면 누구나 접근 가능 (역할 무관)
+        if (startsWithAny(path, "/deliveries", "/delivery-agents", "/delivery-route-legs")) {
+            return "ANY{deliveries,delivery-agents,delivery-route-legs}";
+        }
+
         if (role == null || role.isBlank()) return null;
         String r = role.toUpperCase();
-        String path = (rawPath == null) ? "/" : rawPath.toLowerCase();
 
         // MASTER: 전체 허용
         switch (r) {
@@ -23,7 +30,9 @@ public final class RoleAccessPolicy {
             }
             // DELIVERY 허용: /hubs/**, /hub-routes/**, /orders/**, /messages/**
             case "DELIVERY" -> {
-                if (startsWithAny(path, "/hubs", "/hub-routes", "/orders", "/messages"))
+                if (startsWithAny(path, "/hubs", "/hub-routes", "/orders", "/messages",
+                        "/deliveries", "/delivery-agents", "/delivery-route-legs"
+                ))
                     return "DELIVERY{hubs,hub-routes,orders,messages}";
                 return null;
             }

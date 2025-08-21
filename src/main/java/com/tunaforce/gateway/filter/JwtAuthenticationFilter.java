@@ -62,7 +62,10 @@ public class JwtAuthenticationFilter implements GlobalFilter {
         // 3) 역할-경로 접근 허용 확인
         String subject = claims.getSubject();
         String rolesHeader = claims.get("role", String.class);
-        String accessTag = RoleAccessPolicy.getAccessTag(rolesHeader, path);
+        // 메서드 단위 예외: GET /users 는 로그인 사용자면 누구나 허용
+        String accessTag = (HttpMethod.GET.equals(httpMethod) && path.startsWith("/users"))
+                ? "ANY{users-GET}"
+                : RoleAccessPolicy.getAccessTag(rolesHeader, path);
         if (accessTag == null) {
             log.warn("[GW][AUTHZ DENY] {} {} role={} -> 허용되지 않은 경로", method, path, rolesHeader);
             exchange.getResponse().setStatusCode(HttpStatus.FORBIDDEN);
@@ -94,7 +97,7 @@ public class JwtAuthenticationFilter implements GlobalFilter {
 
     // 공개 경로 우회 규칙
     private boolean isBypass(String path, HttpMethod httpMethod) {
-        return path.startsWith("/auth") || (HttpMethod.GET.equals(httpMethod) && path.startsWith("/users"));
+        return path.startsWith("/auth");
     }
 
     private Claims parseClaims(String token) {
@@ -124,8 +127,22 @@ public class JwtAuthenticationFilter implements GlobalFilter {
         } catch (Exception ignore) {
         }
 
-        // 토큰엔 상세 정보가 없으므로 null로 채움
-        return new UserInfoRequestDto(uuid, null, null, role, null, null, null, null);
+        // 토큰에 삭제 정보(deletedAt/deletedBy)가 있으면 그대로 담아 차단 근거로 사용
+        String deletedAtStr = claims.get("deletedAt", String.class);
+        String deletedByStr = claims.get("deletedBy", String.class);
+        java.time.LocalDateTime deletedAt = null;
+        java.util.UUID deletedBy = null;
+        try {
+            if (deletedAtStr != null && !deletedAtStr.isBlank())
+                deletedAt = java.time.LocalDateTime.parse(deletedAtStr);
+        } catch (Exception ignore) {
+        }
+        try {
+            if (deletedByStr != null && !deletedByStr.isBlank()) deletedBy = java.util.UUID.fromString(deletedByStr);
+        } catch (Exception ignore) {
+        }
+
+        return new UserInfoRequestDto(uuid, null, null, role, null, null, deletedAt, deletedBy);
     }
 
     // no-op: role is mandatory in token, no extraction helper required
@@ -154,10 +171,10 @@ public class JwtAuthenticationFilter implements GlobalFilter {
 
     // 요청 헤더 정리 및 인증 정보 재주입
     private ServerHttpRequest buildMutatedRequest(ServerWebExchange exchange,
-                                                 String subject,
-                                                 String rolesHeader,
-                                                 String source,
-                                                 UserInfoRequestDto user) {
+                                                  String subject,
+                                                  String rolesHeader,
+                                                  String source,
+                                                  UserInfoRequestDto user) {
         return exchange.getRequest().mutate().headers(h -> {
             // 클라이언트가 임의로 보낸 민감 헤더 제거
             h.remove("X-User-Id");

@@ -156,7 +156,7 @@ public class JwtAuthenticationFilter implements GlobalFilter {
 
             // COMPANY allowed: /products/**, /companies/**, /orders/**
             case "COMPANY" -> {
-                if (startsWithAny(path, "/products", "/companies", "/orders"))
+                if (startsWithAny(path, "/products", "/companies", "/orders", "/messages"))
                     return "COMPANY{products,companies,orders}";
                 return null;
             }
@@ -164,7 +164,7 @@ public class JwtAuthenticationFilter implements GlobalFilter {
 
             // HUB allowed: /hubs/**, /hub-routes/**, /companies/**
             case "HUB" -> {
-                if (startsWithAny(path, "/hubs", "/hub-routes", "/companies"))
+                if (startsWithAny(path, "/hubs", "/hub-routes", "/companies", "/messages"))
                     return "HUB{hubs,hub-routes,companies}";
                 return null;
             }

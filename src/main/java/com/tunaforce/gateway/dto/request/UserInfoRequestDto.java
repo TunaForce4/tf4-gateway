@@ -1,5 +1,6 @@
 package com.tunaforce.gateway.dto.request;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 public record UserInfoRequestDto(
@@ -8,6 +9,8 @@ public record UserInfoRequestDto(
         String username,
         String role,
         String slackId,
-        String tel
+        String tel,
+        LocalDateTime deletedAt,
+        UUID deletedBy
 ) {
 }

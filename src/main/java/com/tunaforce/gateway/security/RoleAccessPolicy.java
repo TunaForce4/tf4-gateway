@@ -44,7 +44,7 @@ public final class RoleAccessPolicy {
             }
             // HUB 허용: /hubs/**, /hub-routes/**, /companies/**, /messages/**
             case "HUB" -> {
-                if (startsWithAny(path, "/hubs", "/hub-routes", "/companies", "/messages"))
+                if (startsWithAny(path, "/hubs", "/hub-routes", "/companies","/products", "/messages"))
                     return "HUB{hubs,hub-routes,companies}";
                 return null;
             }
